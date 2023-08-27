@@ -1,0 +1,410 @@
+SELECT TO_CHAR(SYSDATE + 1, 'FMMonth ddth "of year" YYYY') AS tomorrow
+FROM dual;
+
+SELECT product_id, product_name, list_price, ROUND(list_price * 1.02) AS new_list_price
+FROM products
+WHERE category_id IN ('2','3','5');
+
+SELECT first_name || ', ' || last_name || ' is ' || job_title AS "Full Name and JOb Title"
+FROM employees
+WHERE manager_id = 2;
+
+SELECT last_name, hire_date, CEIL(MONTHS_BETWEEN(sysdate, hire_date) / 12) AS years
+FROM employees
+WHERE hire_date < TO_DATE('October 2016', 'MON-YY')
+ORDER BY years;
+
+SELECT last_name, hire_date, TO_CHAR(NEXT_DAY(hire_date + INTERVAL '1' YEAR, 'TUESDAY'), 'FMDAY, Month "the" Ddspth "of year" YYYY')  AS review_date
+FROM employees
+WHERE hire_date > TO_DATE('16','YY')
+ORDER BY review_date;
+
+SELECT w.warehouse_id, w.warehouse_name, l.city, NVL(l.state, 'unkown') AS state
+FROM warehouses w JOIN locations l ON w.location_id = l.location_id;
+
+SELECT job_title, COUNT(employee_id) AS employees
+FROM employees
+GROUP BY job_title
+ORDER BY employees;
+
+SELECT MAX(credit_limit) AS high, MIN(credit_limit) AS low, ROUND(AVG(credit_limit), 2) AS average,
+       (MAX(credit_limit) -  MIN(credit_limit))AS "High and Low Difference"
+FROM customers;
+
+SELECT order_id, SUM(quantity) AS total_items, SUM(unit_price * quantity) AS total_amount
+FROM order_items
+GROUP BY order_id
+HAVING SUM(unit_price * quantity) > 1000000
+ORDER BY total_amount DESC;
+
+SELECT w.warehouse_id, w.warehouse_name, SUM(i.quantity) AS total_products
+FROM warehouses w JOIN inventories i ON w.warehouse_id = i.warehouse_id
+GROUP BY w.warehouse_id, w.warehouse_name
+ORDER BY warehouse_id;
+
+SELECT c.customer_id, c.name AS "customer full name", COALESCE(COUNT(o.order_id),0) AS "the total number of orders"
+FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id
+WHERE c.name LIKE 'O%e%' OR c.name LIKE '%t'
+GROUP BY c.customer_id, c.name
+ORDER BY 3 DESC;
+
+SELECT p.category_id, SUM(o.quantity * o.unit_price) AS total_amount, ROUND(AVG(o.quantity * o.unit_price),2) AS average_amount
+FROM products p JOIN order_items o ON p.product_id = o.product_id
+GROUP BY p.category_id;
+
+SELECT last_name, hire_date
+FROM employees
+WHERE hire_date < (SELECT hire_date   
+                     FROM employees
+                     WHERE employee_id = 107)
+    AND hire_date > TO_DATE('31-MAR-2016', 'DD-MON-YY')
+ORDER BY hire_date, employee_id;
+
+SELECT name, credit_limit
+FROM customers
+WHERE credit_limit IN (SELECT MIN(credit_limit)
+                        FROM customers);
+                        
+SELECT category_id, product_id, product_name, list_price
+FROM products
+WHERE list_price IN (SELECT MAX(list_price)
+                    FROM products
+                    GROUP BY category_id);
+
+SELECT category_id, category_name
+FROM product_categories
+WHERE category_id IN        
+                    (SELECT category_id
+                    FROM products
+                    WHERE list_price = (SELECT MAX(list_price)
+                                        FROM products));
+                    
+
+SELECT product_name, list_price
+FROM products
+WHERE category_id = 1
+AND list_price <  (SELECT MIN(list_price)
+                        FROM products
+                        GROUP BY category_id);
+                        
+
+
+SELECT MAX(list_price)
+FROM products
+WHERE category_id =(SELECT category_id
+FROM products
+WHERE list_price = (SELECT MIN(list_price)
+FROM products));
+
+
+SELECT city
+FROM locations
+MINUS
+SELECT city
+FROM warehouses w JOIN locations l ON w.location_id = l.location_id;
+
+SELECT category_id, category_name, COUNT(*)
+FROM product_categories
+HAVING category_id = 5
+GROUP BY category_id, category_name
+UNION ALL
+SELECT category_id, category_name, COUNT(*)
+FROM product_categories
+HAVING category_id = 1
+GROUP BY category_id, category_name
+UNION ALL
+SELECT category_id, category_name, COUNT(*)
+FROM product_categories
+HAVING category_id = 2
+GROUP BY category_id, category_name;
+
+
+SELECT product_id
+FROM products
+intersect
+SELECT product_id
+FROM inventories 
+WHERE quantity < 5;
+
+SELECT w.warehouse_name, l.state
+FROM warehouses w JOIN locations l ON w.location_ID = l.location_id
+UNION
+SELECT w.warehouse_name, l.state
+FROM warehouses w RIGHT JOIN locations l
+ON w.location_id = l.location_id;
+
+
+/// @brief //////////////////////////////////////////////////////
+ORDER BY 1; - SELECT문 첫번째 column 기준으로 정렬,
+ORDER BY 3; - SELECT문 세번째 column 기준으로 정렬,
+DESC - 내림차순 zyxw OR 9876순
+사용 안할시 - 오름 차순 abcd OR 1234 순
+
+SELECT list_price * 1.05 as "New Price"
+FROM ass_products
+ORDER BY "New Price";
+
+
+
+
+WHERE last_name LIKE '%t%n'; = Watson, Peterson, Robertson, Hamilton, Patterson...
+뜻은 t앞에 0 ~ 여러개의 문자가 올수 있고, t와 n사이에도 여러개의 문자가 올수 있다.
+WHERE last_name LIKE '%r_'; = Rivera, Ward, Howard, Sanders, Henry, Ford...
+r앞에 0~ 여러개의 문자가 올수있고 r뒤에 한자리의 다른 문자로 끝나는거.
+
+이스케이프 문자 '\' backslash
+WHERE course_code LIKE ‘DBS\_%’ - DBS뒤에 1개 ~ 여러개의 문자가 오는지 확인. 
+- DBS는 불포함. DBS뒤에 1개 이상의 문자가 있어야함.
+WHERE course_code LIKE ‘DBS_%’ - DBS 뒤에 0개 ~ 여러개의 문자가 오는지 확인, DBS포함 가능.
+
+Rules of Precedence
+1. Parentheses
+2. * OR /
+3. + OR -
+4. =, <, >, <=, >=, <> 
+5. IS [NOT] NULL, [NOT] LIKE, [NOT] IN 
+6. BETWEEN
+7. NOT
+8. AND
+9. OR
+
+SELECT first_name, last_name,
+       first_name || last_name as "Name1", -- Name1 = IlhyunCho
+       first_name || ' ' || last_name as "Full Name“, -- Full Name =Ilhyun Cho
+       CONCAT(first_name,last_name) as "Name 3", -- Name3 = IlhyunCho
+       CONCAT(CONCAT(first_name, ' '), last_name) as "Name 4" -- Name4 = Ilhyun Cho
+
+-------------------------
+WHERE LOWER(first_name) LIKE 'elli%';
+WHERE UPPER(first_name) LIKE 'ELLI%';
+Elliot
+Elliott
+Ellie
+Ellis
+ 
+----------------------------------------------------------------------------
+SELECT product_name || ' costs ' || list_price
+from products;
+ output - 
+ PRODUCT_NAME||'COSTS'||LIST_PRICE
+ Asus Sabertooth 990FX costs 295.72
+
+
+SELECT last_name || q'['s job title is ]' || job_title
+FROM employees;
+output -
+LAST_NAME||Q'['SJOBTITLEIS]'||JOB_TITLE 
+Russell's job title is Stock Clerk
+
+
+|| q'[]'을 사용하여 || 
+'따옴표를 사용하기 위해서 q'[]' 사용
+
+
+SELECT DISTINCT state - state중에 중복되는 것 제거
+eg) null이 여러개이거나 같은 state가 있으면 1개만 표시되는것.
+
+DESC or DESCRIBE
+displays a table structure.
+
+DESC products;
+OR
+DESCRIBE products;
+
+display products table.
+
+----------------------------------------------------------------------------
+INNER JOIN (JOIN):  두 개의 테이블 간에서 공통된 값을 기준으로 매칭하여 결과를 반환합니다.
+매칭 조건을 충족하는 행만 결과에 포함됩니다.
+테이블 간에 일치하는 값이 없는 경우 해당 행은 결과에서 제외됩니다.
+
+ (LEFT JOIN): 왼쪽 테이블의 모든 행과 오른쪽 테이블에서 일치하는 행을 결합하여 결과를 반환합니다.
+매칭 조건을 충족하는 경우 오른쪽 테이블의 해당 행과 결합됩니다.
+오른쪽 테이블에서 일치하는 값이 없는 경우 NULL 값을 사용하여 왼쪽 테이블의 행이 결과에 포함됩니다.
+
+ (RIGHT JOIN): 오른쪽 테이블의 모든 행과 왼쪽 테이블에서 일치하는 행을 결합하여 결과를 반환합니다.
+매칭 조건을 충족하는 경우 왼쪽 테이블의 해당 행과 결합됩니다.
+왼쪽 테이블에서 일치하는 값이 없는 경우 NULL 값을 사용하여 오른쪽 테이블의 행이 결과에 포함됩니다.
+
+ (FULL JOIN): 왼쪽 테이블과 오른쪽 테이블의 모든 행을 결합하여 결과를 반환합니다.
+매칭 조건을 충족하는 경우 두 테이블의 해당 행이 결합됩니다.
+각 테이블에서 일치하는 값이 없는 경우 NULL 값을 사용하여 결합되지 않은 행이 결과에 포함됩니다.
+
+OUTER JOIN : 매칭되지 않아도 모든값 출력. 대신 매칭되지 않는 부분은 null로 입력됨
+
+
+----------------------------------------------------------------------------
+SELECT TO_CHAR(sysdate +1, 'FMMonth ddth "of Year" YY') AS "tomorrow's date"
+FROM dual;
+output;
+tomorrow's date          
+-------------------------
+June 13th of Year 23
+
+SELECT CEIL = 올림
+
+SELECT ROUND = 반올림 eg) ROUND(5.678, 2) = 5.68 2번째 자리에서 반올림.
+SELECT ROUND(10.96) = 11, 기본값은 0번째 자리임.
+ROUND(235.415, -1) = 240.000
+ROUND(235.415, 2, 1) = 235.410
+
+MOD 함수는 나눗셈 연산에서 나머지를 반환하는 함수입니다. MOD(v, n) 형태로 사용되며, n을 v로 나눈 나머지를 반환합니다.
+MOD 함수는 주어진 숫자가 홀수인지 짝수인지를 판별하는 데에도 사용될 수 있습니다. 어떤 숫자를 2로 MOD 연산하면, 결과값이 0이면 짝수이고, 1이면 홀수입니다. 
+SELECT MOD(121, 14) = 121을 14로 나눈 나머지인 9를 반환
+SELECT MOD(25, 7) = 4
+
+SELECT TRUNC(5.678, 1) - 5.6 소수점 몇번째 자리까지 버림.
+FLOOR = 버림
+-------------------------
+
+CONCAT(‘Database’, ‘Systems’) - DatabaseSystems 
+SUBSTR (‘DatabaseSystems’,1,4) - Data = 첫번째부터 4번째까지 str
+LENGTH(‘DatabaseSystems’) - 15 15글자.
+INSTR(‘DatabaseSystems’, ‘b’)  - 5 'b'가 몇번째에 있는가
+LPAD(‘Tommy’, 10, ‘*’) - *****Tommy 10자리 중 str 제외하고 나머지 자리를 왼쪽부터 *로 채움
+RPAD(‘Tommy’, 10, ‘?’) - Tommy????? 10자리 중 str 제외하고 나머지 자리를 오른쪽부터 ?로 채움
+REPLACE(‘Jack and Jue’, ‘J’, ‘Bl’) - Black and Blue
+
+TRIM(‘D’ FROM ‘Database’) - atabase 처음과 끝에 포함된 D만 제거. -- 처음
+TRIM('e' FROM 'Database')의 결과는 "Databas" -- 끝
+TRIM('b' FROM 'Database')의 결과는 "Database"입니다 -- 중간에거 제거안됨
+ 
+-------------------------
+ 
+June 17, 1987, 5:10:43 p.m
+
+CENTURY: 날짜의 세기를 나타냅니다. 예시에서는 19로 표시됩니다. 세기는 4자리 숫자로 저장되며, 표시 형식에서는 2자리로 표시됩니다.
+YEAR: 날짜의 연도를 나타냅니다. 예시에서는 87로 표시됩니다. 연도는 4자리 숫자로 저장되며, 표시 형식에서는 2자리로 표시됩니다.
+MONTH: 날짜의 월을 나타냅니다. 예시에서는 06으로 표시됩니다.
+DAY: 날짜의 일을 나타냅니다. 예시에서는 17로 표시됩니다.
+HOUR: 시간을 나타냅니다.
+MINUTE: 분을 나타냅니다.
+SECOND: 초를 나타냅니다.
+19 87 06 17 17 10 43
+
+-------------------------
+SYSDATE returns current
+Date
+Time
+
+SELECT	sysdate, sysdate + 30
+FROM dual;
+
+SELECT TO_CHAR(NEXT_DAY(hire_date + INTERVAL '1' YEAR, 'TUESDAY'), 'FMDay, Month "the" Ddspth "of year" YYYY') 
+WHERE hire_date > TO_DATE('2016', 'YYYY')
+
+SELECT CEIL(MONTHS_BETWEEN(SYSDATE, hire_date) / 12) 
+WHERE hire_date < TO_DATE('October 2016', 'Month YYYY')
+
+SELECT TO_CHAR(SYSDATE + 1, 'FMMonth ddth "of year" YYYY')
+
+-------------------------
+SELECT last_name, hire_date, TO_CHAR(NEXT_DAY(hire_date + INTERVAL '1' YEAR, 'Tuesday'), 'FMDay, Month "the" Ddspth "of year" YYYY')
+FMDAY로 TUESDAY, FMDay로 하면 Tuesday, Ddspth = Thirty-First, Twenty-Ninth || Ddth = 31st, 29th
+((hire_date 에 1년 더하고), 다음날이 TUESDAY) 날짜 포맷 'FMDay, Month "the" Ddspth "of year" YYYY')
+output - Tuesday, October the Thirty-First of year 2017
+
+-------------------------
+
+Group BY = AVG, COUNT, MAX, MIN, STDDEV, SUM, VARIANCE 
+- only one per one result
+
+SELECT job_title, COUNT(employee_id) AS employees
+FROM employees
+GROUP BY job_title
+
+ABCD순으로 봤을때 MIN = A, MAX = Z
+
+SELECT count(distinct job_title) 
+FROM employees; 
+distinct - 중복 제거/
+
+-------------------------
+INITCAP(email) - Rose.Stephens@Example.Com
+단어 사이의 구분 기호에 관계없이 문자열에서 각 단어의 첫 글자를 대문자로 표시합니다. space, , . 상관없이 작동
+
+------------------------------------
+SELECT category_id, category_name
+FROM product_categories
+WHERE category_id IN
+                    (SELECT category_id
+                    FROM products
+                    WHERE list_price =
+                                        (SELECT MAX(list_price)
+                                        FROM products));
+
+-----------------------------------------
+UNION = 합집합,두 쿼리 합쳐서 나오는 결과중 중복되는것은 제거해서 나옴.
+UNION ALL = 합집합, 두 쿼리 합쳐서 나오는 결과중 중복되는것도 그대로 출력
+INTERSECT = 교집합, 두 쿼리 합쳐서 나오는 결과중 중복되는것만 출력.
+MINUS = A와 B의 교집합(공통)을 제거하고 A만 출력, 곰보파인거처럼출력.
+
+TO_DATE, TO_NUMBER, TO_CHAR
+
+Other 
+ • Duplicate rows are automatically eliminated except in UNION ALL. 
+ UNION ALL을 제외하고 중복 행은 자동으로 제거됩니다. 
+ • Column names from the first query are the ones that appear in the result. 
+ 첫 번째 쿼리의 열 이름은 결과에 표시되는 이름입니다
+ • The output is sorted in ascending order by default except in UNION ALL. 
+출력은 UNION ALL을 제외하고 기본적으로 오름차순으로 정렬됩니다. 
+
+-----------------------------------------
+WHERE pc.category_id = 5
+UNION
+WHERE pc.category_id = 1
+UNION
+WHERE pc.category_id = 2
+출력순서 1,2,5
+
+WHERE pc.category_id = 5
+UNION ALL
+WHERE pc.category_id = 1
+UNION ALL
+WHERE pc.category_id = 2
+출력순서 5, 1, 2
+
+
+WHERE employee_id = (&Eempid)
+
+-------------------------
+SELECT w.warehouse_id, w.warehouse_name, l.city, NVL(l.state, 'unknown') AS state
+NVL = Null value, 그래서 NVL(l.state, 'unknown')는 null 대신 unknown으로 표시.
+
+
+-------------------------
+SELECT min (salary) 
+FROM employees_a
+GROUP BY department_id; - 각 부서의 최저임금 구함
+
+
+SELECT department_id, employee_id, last_name, salary 
+FROM employees_a
+WHERE salary IN (SELECT min (salary) 
+                 FROM employees_a
+                 GROUP BY department_id);
+IN을 사용하여 각 부서의 최저임금에 해당하는  department_id, employee_id, last_name, salary 출력.
+= 사용불가. IN만 사용가능.
+*** =, LIKE, 사용불가.
+'IN'과 '= ANY'는 같음
+
+-----------------------------------------
+
+
+
+
+
+
+
+SELECT department_id, location_id, TO_DATE (null)
+FROM departments
+UNION
+SELECT department_id, TO_NUMBER (null), hire_date
+FROM employees_a;
+
+
+SELECT employee_id, job_id, salary
+FROM employees_a
+UNION
+SELECT employee_id, job_id, 0
+FROM job_history;

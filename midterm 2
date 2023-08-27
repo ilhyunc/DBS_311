@@ -1,0 +1,89 @@
+SELECT TO_CHAR(SYSDATE + 1, 'FMMonth ddth "of year" YYYY') AS tomorrow
+CEIL(MONTHS_BETWEEN(sysdate, hire_date) / 12)
+
+TO_CHAR(NEXT_DAY(hire_date + INTERVAL '1' YEAR, 'TUESDAY'), 'FMDAY, Month "the" Ddspth "of year" YYYY')
+TUESDAY, August the Twenty-Ninth of year 2017
+TUESDAY, August the Twenty-Second of year 2017
+
+WHERE hire_date < TO_DATE('October 2106', 'MON-YY') 
+              - before October 2106
+--------------------------------------------------
+SELECT CEIL = 올림
+SELECT ROUND = 반올림 eg) ROUND(5.678, 2) = 5.68 2번째 자리에서 반올림.
+SELECT ROUND(10.96) = 11, 기본값은 0번째 자리임.
+ROUND(235.415, -1) = 240.000
+ROUND(235.415, 2, 1) = 235.410
+MOD 함수는 나눗셈 연산에서 나머지를 반환하는 함수입니다. MOD(v, n) 형태로 사용되며, n을 v로 나눈 나머지를 반환합니다.
+MOD 함수는 주어진 숫자가 홀수인지 짝수인지를 판별하는 데에도 사용될 수 있습니다. 어떤 숫자를 2로 MOD 연산하면, 결과값이 0이면 짝수이고, 1이면 홀수입니다. 
+SELECT MOD(121, 14) = 121을 14로 나눈 나머지인 9를 반환
+SELECT MOD(25, 7) = 4
+SELECT TRUNC(5.678, 1) - 5.6 소수점 몇번째 자리까지 버림.
+FLOOR(7.21986) = 7 버림, 가장가까운 정수만 남김.
+
+
+
+--------------------------------------------------
+SELECT last_name, hire_date, CEIL(MONTHS_BETWEEN(sysdate, hire_date) / 12) AS years
+FROM employees
+WHERE hire_date < TO_DATE('October 2016', 'MON-YY') // 30-SEP-16
+
+--------------------------------------------------
+ORDER BY - 적은수부터 출력, abcd순으로 출력
+ORDER BY ... DESC - 큰수부터 출력, ZYXW순
+
+
+--------------------------------------------------
+SELECT order_id, SUM(quantity) AS total_items, SUM(unit_price * quantity) AS total_amount
+FROM order_items
+GROUP BY order_id
+HAVING SUM(unit_price * quantity) > 1000000
+
+GROUP BY 뒤에는 WHERE절 대신 HAVING절 사용
+HAVING에는 ALIAS사용 불가, 사용했던 식 그대로.
+
+--------------------------------------------------
+COALESCE - null 대신 원하는 입력값 받고 싶을때 사용,
+SELECT COALESCE(COUNT(o.order_id), 0) AS "total number OF orders" order_id 카운트가 0이더라도 NULL 대신 0으로 입력
+null 인것도 표시 하려면,
+'LEFT JOIN' OR 'RIGHT JOIN' 사용
+
+
+SELECT w.warehouse_id, w.warehouse_name, l.city, NVL(l.state, 'unknown') AS state
+NVL = Null value, 그래서 NVL(l.state, 'unknown')는 null 대신 unknown으로 표시.
+
+--------------------------------------------------
+SET operator 
+UNION = 합집합,두 쿼리 합쳐서 나오는 결과중 중복되는것은 제거해서 나옴.
+UNION ALL = 합집합, 두 쿼리 합쳐서 나오는 결과중 중복되는것도 그대로 출력
+INTERSECT = 교집합, 두 쿼리 합쳐서 나오는 결과중 중복되는것만 출력.
+MINUS = A와 B의 교집합(공통)을 제거하고 A만 출력, 곰보파인거처럼출력.
+
+SET operator 사용하려면 두 쿼리의 SELECT의 컬럼 (이름 ,순서)가 같거나, (형식,순서)가 같아야함
+
+-----------------------------------------
+WHERE pc.category_id = 5
+UNION
+WHERE pc.category_id = 1
+UNION
+WHERE pc.category_id = 2
+출력순서 1,2,5
+
+WHERE pc.category_id = 5
+UNION ALL
+WHERE pc.category_id = 1
+UNION ALL
+WHERE pc.category_id = 2
+출력순서 5, 1, 2
+
+--------------------------------------------------
+SELECT MAX(credit_limit) AS high, MIN(credit_limit) AS low, ROUND(AVG(credit_limit),2) AS average, 
+(MAX(credit_limit) - MIN(credit_limit))AS "credit_limit"
+FROM customers
+GROUP BY 할 Column이 없으면 필요없음.
+
+--------------------------------
+OUTPUT 중 왼쪽에 null값들이 오게 하려면 RIGHT JOIN
+OUTPUT 중 오른쪽에 null값들이 오게 하려면 LEFT JOIN
+
+
+DECODE(job_id, 'IT_PROG', 1.10*salary,
